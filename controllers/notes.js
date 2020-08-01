@@ -7,9 +7,11 @@ const notesRouter = require("express").Router();
 const Note = require("../models/note");
 
 notesRouter.get("/", (req, res) => {
-  Note.find({}).then((notes) => {
-    res.json(notes);
-  });
+  Note.find({})
+    .populate("user", { username: 1, name: 1 })
+    .then((notes) => {
+      res.json(notes);
+    });
 });
 
 notesRouter.get("/:id", (request, response, next) => {
@@ -26,7 +28,7 @@ notesRouter.get("/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-notesRouter.post("/", (request, response, next) => {
+notesRouter.post("/", async (request, response, next) => {
   // Without the json-parser, the body property would be undefined.
   // The json-parser takes the JSON data of a request, transforms it into a JavaScript object
   // and then attaches it to the body property of the request object before the route handler is called.
@@ -38,16 +40,21 @@ notesRouter.post("/", (request, response, next) => {
     });
   }
 
+  const user = await User.findById(body.userId);
+
   const note = new Note({
     content: body.content,
     important: body.important || false,
     date: new Date(),
+    user: user._id,
   });
   console.log(note);
 
   note
     .save()
-    .then((savedNote) => {
+    .then(async (savedNote) => {
+      user.notes = user.notes.concat(savedNote._id);
+      await user.save();
       response.json(savedNote);
     })
     .catch((error) => next(error));

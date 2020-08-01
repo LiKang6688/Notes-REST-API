@@ -6,6 +6,10 @@ const noteSchema = new mongoose.Schema({
   content: { type: String, minlength: 5, required: true },
   date: { type: Date, required: true },
   important: Boolean,
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
 });
 
 // format the objects returned by Mongoose is to modify the toJSON method of the schema

@@ -4,12 +4,14 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const notesRouter = require("./controllers/notes");
+const usersRouter = require("./controllers/users");
 const middleware = require("./utils/middleware");
 const mongoose = require("mongoose");
 const config = require("./utils/config");
 const logger = require("./utils/logger");
 
 mongoose.set("useFindAndModify", false);
+mongoose.set("useCreateIndex", true);
 
 // establishing the connection to the database
 mongoose
@@ -30,6 +32,7 @@ app.use(middleware.requestLogger);
 
 // the notesRouter that is attached to the /api/notes route.
 app.use("/api/notes", notesRouter);
+app.use("/api/users", usersRouter);
 
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);
