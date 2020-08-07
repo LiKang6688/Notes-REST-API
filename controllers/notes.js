@@ -4,7 +4,18 @@
 // that can be used for defining "related routes" in a single place,
 // that is typically placed in its own module.
 const notesRouter = require("express").Router();
+const jwt = require("jsonwebtoken");
 const Note = require("../models/note");
+const User = require("../models/user");
+const config = require("../utils/config");
+
+const getTokenFrom = (request) => {
+  const authorization = request.get("authorization");
+  if (authorization && authorization.toLowerCase().startsWith("bearer ")) {
+    return authorization.substring(7);
+  }
+  return null;
+};
 
 notesRouter.get("/", (req, res) => {
   Note.find({})
@@ -15,8 +26,13 @@ notesRouter.get("/", (req, res) => {
 });
 
 notesRouter.get("/:id", (request, response, next) => {
+  // Access the provided 'page' and 'limt' parsed query string parameters
+  // let page = req.query.page;
+  // let limit = req.query.limit;
+
+  // Access the parsed route parameters from the path
   const id = request.params.id;
-  //   const note = Note.find((note) => note.id == id);
+  // const note = Note.find((note) => note.id == id);
   Note.findById(id)
     .then((note) => {
       if (note) {
@@ -40,7 +56,15 @@ notesRouter.post("/", async (request, response, next) => {
     });
   }
 
-  const user = await User.findById(body.userId);
+  const token = getTokenFrom(request);
+  // The validity of the token is checked
+  // The object decoded from the token contains the username and id fields,
+  // which tells the server who made the request.
+  const decodedToken = jwt.verify(token, config.SECRET);
+  if (!token || !decodedToken.id) {
+    return response.status(401).json({ error: "token missing or invalid" });
+  }
+  const user = await User.findById(decodedToken.id);
 
   const note = new Note({
     content: body.content,

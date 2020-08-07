@@ -15,7 +15,10 @@ const password = process.argv[2];
 
 const MONGODB_URI = `mongodb+srv://likang:${password}@cluster0.dptdk.mongodb.net/note-app?retryWrites=true&w=majority`;
 
+const SECRET = process.env.SECRET || "dsadsadas";
+
 module.exports = {
   MONGODB_URI,
   PORT,
+  SECRET
 };
