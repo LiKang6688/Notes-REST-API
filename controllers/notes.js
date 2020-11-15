@@ -10,7 +10,9 @@ const User = require("../models/user");
 const config = require("../utils/config");
 
 const getTokenFrom = (request) => {
+  // console.log(request, "request");
   const authorization = request.get("authorization");
+  console.log(authorization, "authorization");
   if (authorization && authorization.toLowerCase().startsWith("bearer ")) {
     return authorization.substring(7);
   }
@@ -57,6 +59,7 @@ notesRouter.post("/", async (request, response, next) => {
   }
 
   const token = getTokenFrom(request);
+  console.log(token, "token");
   // The validity of the token is checked
   // The object decoded from the token contains the username and id fields,
   // which tells the server who made the request.
@@ -92,6 +95,12 @@ notesRouter.put("/:id", (request, response, next) => {
     important: body.important,
   };
 
+  const token = getTokenFrom(request);
+  const decodedToken = jwt.verify(token, config.SECRET);
+  if (!token || !decodedToken.id) {
+    return response.status(401).json({ error: "token missing or invalid" });
+  }
+
   //   the findByIdAndUpdate method receives a regular JavaScript object as its parameter,
   //   and not a new note object created with the Note constructor function.
   //   By default, the updatedNote parameter of the event handler receives the original document
@@ -108,6 +117,13 @@ notesRouter.put("/:id", (request, response, next) => {
 
 notesRouter.delete("/:id", (request, response, next) => {
   const id = request.params.id;
+
+  const token = getTokenFrom(request);
+  const decodedToken = jwt.verify(token, config.SECRET);
+  if (!token || !decodedToken.id) {
+    return response.status(401).json({ error: "token missing or invalid" });
+  }
+
   Note.findByIdAndRemove(id)
     .then(() => {
       response.status(204).end();
